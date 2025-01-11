@@ -1,37 +1,77 @@
-# From Masked-Language Modeling to Translation: Non-English Auxiliary Tasks Improve Zero-shot Spoken Language Understanding
+# Intent Classification and Slot Filling
 
-This repository contains all code to reproduce the results in the paper. If you are just here for the data, see the `data/` folder (AND DON'T FORGET TO CITE THE PAPERS LISTED BELOW) 
+This project implements several approaches for multi-intent classification and slot filling. It includes multiple models and comparison of their performance.
 
-[![data](table.png)]()
+## Models Implemented
+- Logistic Regression with TF-IDF 
+- Naive Bayes
+- BERT
+- Word2Vec with Logistic Regression
+- TF-IDF with SVM
+- Custom Slot-Gated Model (BiLSTM + Attention)
 
-**NOTE**: Thanks to Evgeniia Razumovskaia, we have found some errors in the original data. We have kept the original data in the repo for reproducability reasons and the fixed version can be found in data/xSID-0.2. The main differences are in Arabic, where we forgot to map the intent labels.
+## Dataset Structure
+- Train (70%): 24,498 samples
+- Dev (15%): 5,250 samples
+- Test (15%): 5,250 samples
 
-**NOTE** 02-11-2021: Thanks to Noëmi Aepli, we have fixed the sentences in the English dev/test files to match the other languages. And thanks to Milan Grita we have corrected mismatches in words in the comments and the annotation (mainly in the English files).
+### Intents Distribution
+- AddToPlaylist
+- BookRestaurant
+- GetWeather
+- PlayMusic
+- RateBook
+- SearchCreativeWork
+- SearchScreeningEvent
 
-**NOTE** 29-03-2022: There was an error in the nluEval.py code for calculating the loose overlap (thanks to Mike Zhang for finding and fixing it). The results in the paper for loose f1 were unfortunately overly optimistic.
+## Data Preprocessing
+- Text lowercase conversion
+- Special character removal
+- Stopword removal
+- Lemmatization using SpaCy
+- TF-IDF vectorization
+- Word2Vec embeddings
 
-**UPDATE** 05-2023: version 0.4 is released, including Neapolitan and Swiss German
+## Performance Metrics
+- Intent Classification Accuracy
+- Slot F1 Score
+- Semantic Accuracy (both intent and slots correct)
 
-**UPDATE** 04-2024: version 0.5 is released, including Bavarian and Lithuanian, please also see [https://github.com/mainlp/NaLiBaSID/tree/main](https://github.com/mainlp/NaLiBaSID/tree/main) for alternatives for these languages (including native queries!).
+## Results
 
-To reproduce all results in the paper, you have to run `./scripts/runAll.sh`. However, in practice this would take a very long time (especially when rerunning nmt-transfer, `./scripts/1.\*`), which is why we would suggest to inspect `./scripts/runAll.sh`, decide which parts are relevant for you, and manually run the required commands parallel. It should be noted that some of the scripts may fail, because we used the MultiAtis dataset, which is not publicly available. To run the experiments on those, [obtain the data](https://catalog.ldc.upenn.edu/LDC2021T04), convert it with `scripts/tsv2conll.py` in `data/multiAtis`. Alternatively, one could remove the `MultiAtis` key from the `datasets` dictionary in `scripts/myutils.py`. All tables and graphs of the paper can be reproduced by running `scripts/genAll.sh`.
+### a) TF-IDF and Logistic Regression
+Transforms text data into numerical vectors, highlighting the importance of words in the corpus. Logistic
+Regression achieved high F1 scores for frequent intents like “AddToPlaylist” but struggled with more
+complex or nuanced queries. Example classification report on test data:
 
-The experiments are divided in the scripts folder:
+- AddToPlaylist: Precision 0.99, Recall 1.00, F1-Score 0.99  
+- BookRestaurant: Precision 0.99, Recall 0.98, F1-Score 0.98  
+- GetWeather: Precision 1.00, Recall 0.93, F1-Score 0.96  
+- …
 
-* 0.\* Data preparation and setup 
-* 1.\* Translated the training data for the `nmt-transfer` model 
-* 2.\* Trains MaChAmp for all languages and predicts on all files 
-* 3.\* Generated the main table in the paper 
-* 4.\* Run on the test data 
-* 5.\* All additional experiments for the analysis section in the paper 
-* 6.\* Generate all tables for the appendix 
+### b) Naive Bayes
+Naive Bayes was implemented on TF-IDF features, offering speedy classification with slightly lower
+accuracy on rarer classes. For instance, F1 scores decreased for “GetWeather” and “PlayMusic.” However,
+it remains a viable option for quick baseline tasks.
 
-For many parts we also included the outputs so that it is not always necessary to re-run. The automatically translated training data as well as the automatically converted English training data can be found in `/data/xSID/`. The output predictions and scores of all models are also included in `predictions/`.
+### c) BERT
+Leverages Transformer-based architecture for contextual understanding. It excelled in multi-intent classification,
+outperforming other models in more complex categories like “SearchCreativeWork.” Achieved near-perfect
+micro F1-scores (~0.98), at the cost of higher computational overhead.
 
-This code is largely based on [MaChAmp](https://machamp-nlp.github.io/), we include a copy of the exact version of MaChAmp that was used.
+### d) Word2Vec
+Trains embeddings on the combined text, aggregates sentence vectors, then applies logistic regression for
+multi-intent classification. This approach performed well on frequent classes but had moderate difficulty
+with rarer or context-dependent intents.
+
+### e) TF-IDF and SVM
+Combines TF-IDF vectorization with a OneVsRest SVM approach. Achieved substantial accuracy across
+all intents—most notably excelling in frequent categories like “AddToPlaylist.”
+
+### f) Base Model
+Originally derived from a paper that used SNIPS rather than MixSNIPS. Adapting the code required extensive modifications and updates due to outdated TensorFlow and data preprocessing steps. We ultimately wrote our own code based on the mathematical foundations from the paper to handle multi-intent detection effectively.
 
 ## Citation
-```
 @inproceedings{van-der-goot-etal-2021-masked,
     title = "From Masked Language Modeling to Translation: Non-{E}nglish Auxiliary Tasks Improve Zero-shot Spoken Language Understanding",
     author = {van der Goot, Rob  and
@@ -61,68 +101,3 @@ This code is largely based on [MaChAmp](https://machamp-nlp.github.io/), we incl
     doi = "10.18653/v1/2021.naacl-main.197",
     pages = "2479--2497",
 }
-```
-If you use version >= 0.4 (which includes Neapolitan and Swiss German), please also cite:
-
-```
-@inproceedings{aepli-etal-2023-findings,
-    title = "Findings of the {V}ar{D}ial Evaluation Campaign 2023",
-    author = {Aepli, No{\"e}mi  and
-      {\c{C}}{\"o}ltekin, {\c{C}}a{\u{g}}r{\i}  and
-      Van Der Goot, Rob  and
-      Jauhiainen, Tommi  and
-      Kazzaz, Mourhaf  and
-      Ljube{\v{s}}i{\'c}, Nikola  and
-      North, Kai  and
-      Plank, Barbara  and
-      Scherrer, Yves  and
-      Zampieri, Marcos},
-    editor = {Scherrer, Yves  and
-      Jauhiainen, Tommi  and
-      Ljube{\v{s}}i{\'c}, Nikola  and
-      Nakov, Preslav  and
-      Tiedemann, J{\"o}rg  and
-      Zampieri, Marcos},
-    booktitle = "Tenth Workshop on NLP for Similar Languages, Varieties and Dialects (VarDial 2023)",
-    month = may,
-    year = "2023",
-    address = "Dubrovnik, Croatia",
-    publisher = "Association for Computational Linguistics",
-    url = "https://aclanthology.org/2023.vardial-1.25",
-    doi = "10.18653/v1/2023.vardial-1.25",
-    pages = "251--261",
-}
-```
-
-If you use version >= 0.5 (which includes Bavarian and Lithuanian), please also cite:
-
-```
-@inproceedings{winkler-etal-2024-slot,
-    title = "Slot and Intent Detection Resources for {B}avarian and {L}ithuanian: Assessing Translations vs Natural Queries to Digital Assistants",
-    author = "Winkler, Miriam  and
-      Juozapaityte, Virginija  and
-      van der Goot, Rob  and
-      Plank, Barbara",
-    editor = "Calzolari, Nicoletta  and
-      Kan, Min-Yen  and
-      Hoste, Veronique  and
-      Lenci, Alessandro  and
-      Sakti, Sakriani  and
-      Xue, Nianwen",
-    booktitle = "Proceedings of the 2024 Joint International Conference on Computational Linguistics, Language Resources and Evaluation (LREC-COLING 2024)",
-    month = may,
-    year = "2024",
-    address = "Torino, Italia",
-    publisher = "ELRA and ICCL",
-    url = "https://aclanthology.org/2024.lrec-main.1297",
-    pages = "14898--14915",
-@inproceedings{Winkler2024,
-  title = "Slot and Intent Detection Resources for {B}avarian and {L}ithuanian: Assessing Translations vs Natural Queries to Digital Assistants",
-  author = "Winkler, Miriam and Juozapaityte, Virginija and van der Goot, Rob and Plank, Barbara",
-  booktitle = "Proceedings of The 2024 Joint International Conference on Computational Linguistics, Language Resources and Evaluation",
-  year = "2024",
-  publisher = "Association for Computational Linguistics",
-}
-```
-
-
