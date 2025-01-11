@@ -71,6 +71,8 @@ all intents—most notably excelling in frequent categories like “AddToPlaylis
 ### f) Base Model
 Originally derived from a paper that used SNIPS rather than MixSNIPS. Adapting the code required extensive modifications and updates due to outdated TensorFlow and data preprocessing steps. We ultimately wrote our own code based on the mathematical foundations from the paper to handle multi-intent detection effectively.
 
+<img width="447" alt="Screenshot 2025-01-11 at 8 39 59 PM" src="https://github.com/user-attachments/assets/acaffabf-7f48-40e2-8385-af854572ef70" />
+
 ## Citation
 @inproceedings{van-der-goot-etal-2021-masked,
     title = "From Masked Language Modeling to Translation: Non-{E}nglish Auxiliary Tasks Improve Zero-shot Spoken Language Understanding",
